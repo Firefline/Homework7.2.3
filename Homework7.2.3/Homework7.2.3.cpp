@@ -26,23 +26,21 @@ public:
     template <typename T>
     T swap_lock(T& parameter_1, T& parameter_2) noexcept
     {
+        lock(m1, m2);
         T temp = std::move(parameter_1);
-        m1.lock();
+        std::lock_guard <std::mutex> la{ m1, std::adopt_lock };
         parameter_1 = std::move(parameter_2);
-        m2.lock();
+        std::lock_guard <std::mutex> lb{m2, std::adopt_lock};
         parameter_2 = std::move(temp);
-        m1.unlock();
-        m2.unlock();
         return parameter_1, parameter_2;
     }
 
     template <typename T>
-    T swap_guard(T& parameter_1, T& parameter_2) noexcept
+    T swap_scoped(T& parameter_1, T& parameter_2) noexcept
     {
+        std::scoped_lock lock{ m1, m2 };
         T temp = std::move(parameter_1);
-        std::lock_guard <std::mutex> grd_1(m1);
         parameter_1 = std::move(parameter_2);
-        std::lock_guard <std::mutex> grd_2(m2);
         parameter_2 = std::move(temp);
         return parameter_1, parameter_2;
     }
@@ -84,9 +82,9 @@ int main(int argc, char** argv)
     std::cout << "После обмена (lock): " << std::endl;
     data.print(data.number_1, data.number_2);
 
-    data.swap_guard(data.number_1, data.number_2);
+    data.swap_scoped(data.number_1, data.number_2);
 
-    std::cout << "После обмена (guard_lock): " << std::endl;
+    std::cout << "После обмена (scoped_lock): " << std::endl;
     data.print(data.number_1, data.number_2);
 
     data.swap_unique(data.number_1, data.number_2);
